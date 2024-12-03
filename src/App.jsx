@@ -3,18 +3,22 @@ import React, { useEffect, useState } from 'react';
 function App() {
     const [message, setMessage] = useState('');
 
-    const updateMessage = () => {
-        const now = new Date();
-        const formattedTime = now.toLocaleTimeString('en-IN', { timeZone: 'Asia/Kolkata' });
-        setMessage(`Cron Job Updated at ${formattedTime}`);
+    const fetchMessage = async () => {
+        try {
+            const response = await fetch('http://localhost:5000/api/message');
+            const data = await response.json();
+            setMessage(data.message);
+        } catch (error) {
+            console.error("Error fetching message:", error);
+        }
     };
 
     useEffect(() => {
-        // Initial message update
-        updateMessage();
+        // Fetch initial message when component mounts
+        fetchMessage();
 
-        // Set up interval to update message every 5 minutes
-        const intervalId = setInterval(updateMessage, 300000); // 300000 ms = 5 minutes
+        // Set an interval to fetch the message every 5 minutes
+        const intervalId = setInterval(fetchMessage, 300000); // 300000 ms = 5 minutes
 
         // Cleanup interval on component unmount
         return () => clearInterval(intervalId);
