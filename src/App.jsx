@@ -1,35 +1,32 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from "react";
+import axios from "axios";
 
 function App() {
-    const [message, setMessage] = useState('');
+  const [message, setMessage] = useState("Fetching message...");
+  const [lastUpdated, setLastUpdated] = useState("");
 
-    const fetchMessage = async () => {
-        try {
-            const response = await fetch('http://localhost:5000/api/message');
-            const data = await response.json();
-            setMessage(data.message);
-        } catch (error) {
-            console.error("Error fetching message:", error);
-        }
-    };
+  const fetchMessage = async () => {
+    try {
+      const response = await axios.get("https://cron-app-rouge.vercel.app/api/update-message");
+      setMessage(response.data.message);
+      setLastUpdated(response.data.updatedAt);
+    } catch (error) {
+      console.error("Error fetching message:", error);
+    }
+  };
 
-    useEffect(() => {
-        // Fetch initial message when component mounts
-        fetchMessage();
+  useEffect(() => {
+    fetchMessage();
+    const interval = setInterval(fetchMessage, 5000); // Poll every 5 seconds
+    return () => clearInterval(interval);
+  }, []);
 
-        // Set an interval to fetch the message every 5 minutes
-        const intervalId = setInterval(fetchMessage, 300000); // 300000 ms = 5 minutes
-
-        // Cleanup interval on component unmount
-        return () => clearInterval(intervalId);
-    }, []);
-
-    return (
-        <div style={{ textAlign: 'center', marginTop: '50px' }}>
-            <h1>Welcome to My Vite React App</h1>
-            <p>{message}</p>
-        </div>
-    );
+  return (
+    <div style={{ textAlign: "center", marginTop: "50px" }}>
+      <h1>{message}</h1>
+      <p>Last Updated: {lastUpdated}</p>
+    </div>
+  );
 }
 
 export default App;
