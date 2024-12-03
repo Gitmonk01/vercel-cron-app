@@ -1,29 +1,29 @@
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 function App() {
-    const [cronStatus, setCronStatus] = useState(null);
+    const [message, setMessage] = useState('');
+
+    const updateMessage = () => {
+        const now = new Date();
+        const formattedTime = now.toLocaleTimeString('en-IN', { timeZone: 'Asia/Kolkata' });
+        setMessage(`Cron Job Updated at ${formattedTime}`);
+    };
 
     useEffect(() => {
-        const fetchCronStatus = async () => {
-            const response = await fetch('/api/cron');
-            const data = await response.json();
-            setCronStatus(data);
-        };
+        // Initial message update
+        updateMessage();
 
-        fetchCronStatus();
+        // Set up interval to update message every 5 minutes
+        const intervalId = setInterval(updateMessage, 300000); // 300000 ms = 5 minutes
+
+        // Cleanup interval on component unmount
+        return () => clearInterval(intervalId);
     }, []);
 
     return (
-        <div>
-            <h1>Cron Job Test</h1>
-            {cronStatus ? (
-                <div>
-                    <p>Status: {cronStatus.message}</p>
-                    <p>Last Run Time: {cronStatus.time}</p>
-                </div>
-            ) : (
-                <p>Loading...</p>
-            )}
+        <div style={{ textAlign: 'center', marginTop: '50px' }}>
+            <h1>Welcome to My Vite React App</h1>
+            <p>{message}</p>
         </div>
     );
 }
