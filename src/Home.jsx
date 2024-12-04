@@ -3,18 +3,13 @@ import axios from 'axios';
 import './Home.css';
 
 const Home = () => {
-  const [message, setMessage] = useState('');
+  const [message, setMessage] = useState(
+    localStorage.getItem('timestampMessage') || ''
+  ); // Load saved message
   const [lastCronTimestamp, setLastCronTimestamp] = useState(
     localStorage.getItem('lastCronTimestamp') || null
-  ); // Load saved timestamp initially
-
-  // Load the saved timestamp from localStorage on component mount
-  useEffect(() => {
-    const savedMessage = localStorage.getItem('timestampMessage');
-    if (savedMessage) {
-      setMessage(savedMessage); // Set the saved message
-    }
-  }, []);
+  ); // Load saved timestamp
+  const [isPolling, setIsPolling] = useState(true); // Control polling
 
   // Fetch timestamp from the backend API
   const fetchTimestamp = async (isManual = false) => {
@@ -25,11 +20,10 @@ const Home = () => {
           ? 'http://localhost:3000/api/cron'
           : 'https://cron-app-rouge.vercel.app/api/cron';
 
-      // Include last known timestamp to the backend for optimization
+      // Send the lastCronTimestamp to the backend
       const response = await axios.get(url, {
         params: { lastCronTimestamp },
       });
-      console.log('API Response:', response.data);
 
       const newTimestamp = response.data.message;
 
@@ -45,36 +39,39 @@ const Home = () => {
     }
   };
 
-  // Poll only if the backend indicates a cron update is expected
+  // Polling logic to check for updates
   useEffect(() => {
-    const intervalId = setInterval(async () => {
-      try {
-        console.log('Polling for cron update...');
-        const url =
-          process.env.NODE_ENV === 'development'
-            ? 'http://localhost:3000/api/cron'
-            : 'https://cron-app-rouge.vercel.app/api/cron';
+    if (isPolling) {
+      const intervalId = setInterval(async () => {
+        try {
+          console.log('Polling for cron updates...');
+          const url =
+            process.env.NODE_ENV === 'development'
+              ? 'http://localhost:3000/api/cron'
+              : 'https://cron-app-rouge.vercel.app/api/cron';
 
-        const response = await axios.get(url, {
-          params: { lastCronTimestamp },
-        });
+          // Send the lastCronTimestamp to the backend
+          const response = await axios.get(url, {
+            params: { lastCronTimestamp },
+          });
 
-        const newTimestamp = response.data.message;
+          const newTimestamp = response.data.message;
 
-        // Only update if a new timestamp is detected
-        if (newTimestamp && newTimestamp !== lastCronTimestamp) {
-          setLastCronTimestamp(newTimestamp);
-          setMessage(newTimestamp);
-          localStorage.setItem('timestampMessage', newTimestamp);
-          localStorage.setItem('lastCronTimestamp', newTimestamp);
+          // Update only if a new timestamp is detected
+          if (newTimestamp && newTimestamp !== lastCronTimestamp) {
+            setLastCronTimestamp(newTimestamp);
+            setMessage(newTimestamp);
+            localStorage.setItem('timestampMessage', newTimestamp);
+            localStorage.setItem('lastCronTimestamp', newTimestamp);
+          }
+        } catch (error) {
+          console.error('Error during polling:', error);
         }
-      } catch (error) {
-        console.error('Error during polling:', error);
-      }
-    }, 60000); // Poll every minute
+      }, 60000); // Poll every minute
 
-    return () => clearInterval(intervalId); // Cleanup on component unmount
-  }, [lastCronTimestamp]);
+      return () => clearInterval(intervalId); // Cleanup on component unmount
+    }
+  }, [isPolling, lastCronTimestamp]);
 
   return (
     <div className="home">
