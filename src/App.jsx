@@ -1,9 +1,10 @@
-import React from "react";
-import Home from "./Home";
+import React from 'react';
+import Home from './Home';
 
 const App = () => {
   return (
-    <div style={{ margin: 0, padding: 0, height: "100vh" }}>
+    <div className="App">
+      <h1>Cron Job Timestamp Viewer</h1>
       <Home />
     </div>
   );

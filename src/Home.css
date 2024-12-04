@@ -1,7 +1,11 @@
-/* Home.css */
-
-/* Basic reset for body */
-body {
-    margin: 0;
-    padding: 0;
+.home {
+    text-align: center;
+    margin-top: 50px;
   }
+  
+  .home p {
+    font-size: 1.5em;
+    font-weight: bold;
+    color: #4CAF50;
+  }
+  
