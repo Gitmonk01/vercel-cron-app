@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import axios from 'axios';
 import './Home.css';
 
 const Home = () => {
   const [message, setMessage] = useState('');
-  
-  // Fetch timestamp from the backend API
+
+  // Fetch timestamp from the backend API when the button is pressed
   const fetchTimestamp = async () => {
     try {
       console.log('Fetching timestamp...'); // Debugging: Check if function is called
@@ -22,22 +22,6 @@ const Home = () => {
       console.error('Error fetching timestamp:', error);
     }
   };
-
-  // Fetch the timestamp immediately when the component mounts
-  useEffect(() => {
-    fetchTimestamp(); // Fetch timestamp as soon as the component loads
-
-    // Set up polling to fetch timestamp every minute (60000ms)
-    const intervalId = setInterval(fetchTimestamp, 60000);
-
-    // Clean up the interval when the component unmounts
-    return () => clearInterval(intervalId);
-  }, []);
-
-  // Log the message state whenever it updates
-  useEffect(() => {
-    console.log('Updated message:', message); // Debugging: Check updated message
-  }, [message]);
 
   return (
     <div className="home">
