@@ -44,7 +44,20 @@ const Home = () => {
     const intervalId = setInterval(async () => {
       try {
         console.log('Polling for cron update...');
-        await fetchTimestamp(false); // Only fetch for cron updates
+        const url =
+          process.env.NODE_ENV === 'development'
+            ? 'http://localhost:3000/api/cron'
+            : 'https://cron-app-rouge.vercel.app/api/cron';
+
+        const response = await axios.get(url);
+        const newTimestamp = response.data.message;
+
+        // Update only if the timestamp has changed
+        if (newTimestamp !== lastCronTimestamp) {
+          setLastCronTimestamp(newTimestamp);
+          setMessage(newTimestamp);
+          localStorage.setItem('timestampMessage', newTimestamp);
+        }
       } catch (error) {
         console.error('Error during polling:', error);
       }
