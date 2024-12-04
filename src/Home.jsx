@@ -4,7 +4,7 @@ import './Home.css';
 
 const Home = () => {
   const [message, setMessage] = useState('');
-
+  
   // Fetch timestamp from the backend API
   const fetchTimestamp = async () => {
     try {
@@ -23,10 +23,16 @@ const Home = () => {
     }
   };
 
-  // Handle button click
-  const handleButtonClick = () => {
-    fetchTimestamp();
-  };
+  // Fetch the timestamp immediately when the component mounts
+  useEffect(() => {
+    fetchTimestamp(); // Fetch timestamp as soon as the component loads
+
+    // Set up polling to fetch timestamp every minute (60000ms)
+    const intervalId = setInterval(fetchTimestamp, 60000);
+
+    // Clean up the interval when the component unmounts
+    return () => clearInterval(intervalId);
+  }, []);
 
   // Log the message state whenever it updates
   useEffect(() => {
@@ -35,7 +41,7 @@ const Home = () => {
 
   return (
     <div className="home">
-      <button className="timestamp-btn" onClick={handleButtonClick}>
+      <button className="timestamp-btn" onClick={fetchTimestamp}>
         Get Timestamp
       </button>
       {message && <p>{message}</p>} {/* Display the message if it's available */}
