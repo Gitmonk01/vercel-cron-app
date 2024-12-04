@@ -9,7 +9,7 @@ const Home = () => {
   // Fetch timestamp from the backend API
   const fetchTimestamp = async () => {
     try {
-      const response = await axios.get('/api/timestamp'); // Use relative URL in Vercel (no need for full domain)
+      const response = await axios.get('/api/cron'); // Use relative URL in Vercel (no need for full domain)
       setMessage(response.data.message);
     } catch (error) {
       console.error('Error fetching timestamp:', error);
