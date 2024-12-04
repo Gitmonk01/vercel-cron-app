@@ -4,7 +4,8 @@ import './Home.css';
 
 const Home = () => {
   const [message, setMessage] = useState('');
-  const [lastCronTimestamp, setLastCronTimestamp] = useState(null); // To track cron-triggered updates
+  const [lastCronTimestamp, setLastCronTimestamp] = useState(null); // To track the last cron-triggered timestamp
+  const [isPolling, setIsPolling] = useState(true); // To control polling for cron triggers
 
   // Fetch timestamp from the backend API
   const fetchTimestamp = async (isManual = false) => {
@@ -32,11 +33,21 @@ const Home = () => {
     }
   };
 
-  // Periodically check for timestamp updates every minute
+  // Conditional polling to check for cron job updates
   useEffect(() => {
-    const intervalId = setInterval(() => fetchTimestamp(false), 60000); // Only for cron job triggers
-    return () => clearInterval(intervalId); // Cleanup on component unmount
-  }, [lastCronTimestamp]); // Dependency ensures the effect is aware of the last cron timestamp
+    if (isPolling) {
+      const intervalId = setInterval(async () => {
+        try {
+          console.log('Polling for cron update...');
+          await fetchTimestamp(false); // Only fetch for cron updates
+        } catch (error) {
+          console.error('Error during polling:', error);
+        }
+      }, 60000); // Poll every minute
+
+      return () => clearInterval(intervalId); // Cleanup on component unmount
+    }
+  }, [isPolling, lastCronTimestamp]); // Dependency ensures polling logic responds to state
 
   return (
     <div className="home">
