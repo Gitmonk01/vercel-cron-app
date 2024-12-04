@@ -4,44 +4,43 @@ import './Home.css';
 
 const Home = () => {
   const [message, setMessage] = useState('');
-  const [lastFetched, setLastFetched] = useState(null); // Track the last fetch time
+  const [lastCronTimestamp, setLastCronTimestamp] = useState(null); // To track cron-triggered updates
 
   // Fetch timestamp from the backend API
-  const fetchTimestamp = async () => {
+  const fetchTimestamp = async (isManual = false) => {
     try {
       console.log('Fetching timestamp...');
-
-      const url = process.env.NODE_ENV === 'development'
-        ? 'http://localhost:3000/api/cron'
-        : 'https://cron-app-rouge.vercel.app/api/cron';
+      const url =
+        process.env.NODE_ENV === 'development'
+          ? 'http://localhost:3000/api/cron'
+          : 'https://cron-app-rouge.vercel.app/api/cron';
 
       const response = await axios.get(url);
       console.log('API Response:', response.data);
 
-      // Update the timestamp only if it differs from the last fetched timestamp
-      if (response.data.message !== lastFetched) {
-        setMessage(response.data.message);
-        setLastFetched(response.data.message); // Store the last fetched timestamp
+      const newTimestamp = response.data.message;
+
+      // Update the message only under specific conditions:
+      // 1. If manually triggered
+      // 2. If a new cron-triggered timestamp is available
+      if (isManual || newTimestamp !== lastCronTimestamp) {
+        setMessage(newTimestamp);
+        if (!isManual) setLastCronTimestamp(newTimestamp); // Update the cron-tracked timestamp
       }
     } catch (error) {
       console.error('Error fetching timestamp:', error);
     }
   };
 
-  // Fetch the timestamp when the button is clicked
-  const handleButtonClick = () => {
-    fetchTimestamp();
-  };
-
   // Periodically check for timestamp updates every minute
   useEffect(() => {
-    const intervalId = setInterval(fetchTimestamp, 60000); // Poll every 60 seconds
-    return () => clearInterval(intervalId); // Cleanup the interval on component unmount
-  }, [lastFetched]); // Re-run effect when the lastFetched state changes
+    const intervalId = setInterval(() => fetchTimestamp(false), 60000); // Only for cron job triggers
+    return () => clearInterval(intervalId); // Cleanup on component unmount
+  }, [lastCronTimestamp]); // Dependency ensures the effect is aware of the last cron timestamp
 
   return (
     <div className="home">
-      <button className="timestamp-btn" onClick={handleButtonClick}>
+      <button className="timestamp-btn" onClick={() => fetchTimestamp(true)}>
         Get Timestamp
       </button>
       {message && <p>{message}</p>} {/* Display the timestamp */}
