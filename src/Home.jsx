@@ -4,8 +4,15 @@ import './Home.css';
 
 const Home = () => {
   const [message, setMessage] = useState('');
-  const [lastCronTimestamp, setLastCronTimestamp] = useState(null); // To track the last cron-triggered timestamp
-  const [isPolling, setIsPolling] = useState(true); // To control polling for cron triggers
+  const [lastCronTimestamp, setLastCronTimestamp] = useState(null);
+
+  // Load the saved timestamp from localStorage on component mount
+  useEffect(() => {
+    const savedMessage = localStorage.getItem('timestampMessage');
+    if (savedMessage) {
+      setMessage(savedMessage); // Set the saved message
+    }
+  }, []); // Run only once on component mount
 
   // Fetch timestamp from the backend API
   const fetchTimestamp = async (isManual = false) => {
@@ -22,10 +29,9 @@ const Home = () => {
       const newTimestamp = response.data.message;
 
       // Update the message only under specific conditions:
-      // 1. If manually triggered
-      // 2. If a new cron-triggered timestamp is available
       if (isManual || newTimestamp !== lastCronTimestamp) {
         setMessage(newTimestamp);
+        localStorage.setItem('timestampMessage', newTimestamp); // Save to localStorage
         if (!isManual) setLastCronTimestamp(newTimestamp); // Update the cron-tracked timestamp
       }
     } catch (error) {
@@ -35,19 +41,17 @@ const Home = () => {
 
   // Conditional polling to check for cron job updates
   useEffect(() => {
-    if (isPolling) {
-      const intervalId = setInterval(async () => {
-        try {
-          console.log('Polling for cron update...');
-          await fetchTimestamp(false); // Only fetch for cron updates
-        } catch (error) {
-          console.error('Error during polling:', error);
-        }
-      }, 60000); // Poll every minute
+    const intervalId = setInterval(async () => {
+      try {
+        console.log('Polling for cron update...');
+        await fetchTimestamp(false); // Only fetch for cron updates
+      } catch (error) {
+        console.error('Error during polling:', error);
+      }
+    }, 60000); // Poll every minute
 
-      return () => clearInterval(intervalId); // Cleanup on component unmount
-    }
-  }, [isPolling, lastCronTimestamp]); // Dependency ensures polling logic responds to state
+    return () => clearInterval(intervalId); // Cleanup on component unmount
+  }, [lastCronTimestamp]); // Dependency ensures polling logic responds to state
 
   return (
     <div className="home">
